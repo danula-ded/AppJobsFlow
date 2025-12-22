@@ -45,6 +45,9 @@ jobs:
           ORG_GRADLE_PROJECT_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           ORG_GRADLE_PROJECT_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           ORG_GRADLE_PROJECT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ORG_GRADLE_PROJECT_HH_CLIENT_ID: ${{ secrets.HH_CLIENT_ID }}
+          ORG_GRADLE_PROJECT_HH_CLIENT_SECRET: ${{ secrets.HH_CLIENT_SECRET }}
+          ORG_GRADLE_PROJECT_HH_REDIRECT_URI: ${{ secrets.HH_REDIRECT_URI }}
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 
       - name: Upload APK artifact
