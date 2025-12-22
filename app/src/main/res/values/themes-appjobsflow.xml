@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.AppJobsFlow" parent="@style/Theme.AppJobsFlow.Base" />
+    <style name="Theme.AppJobsFlow" parent="@style/Theme.AppJobsFlowBase" />
 </resources>
