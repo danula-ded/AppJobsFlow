@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Save
@@ -167,6 +168,17 @@ fun AppScaffold(
                         selected = navController.currentDestination?.route == "advancedOptions",
                         onClick = {
                             navController.navigate("advancedOptions") {
+                                launchSingleTop = true
+                            }
+                            scope.launch { drawerState.close() }
+                        }
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.applied_vacancies)) },
+                        icon = { Icon(Icons.Filled.Work, contentDescription = stringResource(R.string.applied_vacancies_content_description)) },
+                        selected = navController.currentDestination?.route == "appliedVacancies",
+                        onClick = {
+                            navController.navigate("appliedVacancies") {
                                 launchSingleTop = true
                             }
                             scope.launch { drawerState.close() }

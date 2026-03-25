@@ -23,4 +23,15 @@
     <string name="menu_content_description">Открыть меню навигации</string>
     <string name="drawer_greeting">Здравствуйте, %1$s %2$s!</string>
     <string name="export_tokens">Экспорт токенов</string>
+    <string name="applied_vacancies">Откликнутые вакансии</string>
+    <string name="applied_vacancies_content_description">Перейти к истории откликов</string>
+    <string name="applied_vacancies_search_label">Поиск по откликам</string>
+    <string name="applied_vacancies_count">Найдено: %1$d из %2$d</string>
+    <string name="applied_vacancies_empty">История откликов пуста или ничего не найдено.</string>
+    <string name="applied_vacancies_applied_at">Отклик: %1$s</string>
+    <string name="applied_vacancies_source">Источник: %1$s</string>
+    <string name="applied_vacancies_resume_id">Резюме: %1$s</string>
+    <string name="refresh">Обновить</string>
+    <string name="clear_history">Очистить историю</string>
+    <string name="open_vacancy">Открыть вакансию</string>
 </resources>

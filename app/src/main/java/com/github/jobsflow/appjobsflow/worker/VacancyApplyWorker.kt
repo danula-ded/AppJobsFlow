@@ -6,6 +6,8 @@ import androidx.work.WorkerParameters
 import com.github.jobsflow.appjobsflow.api.ApiClient
 import com.github.jobsflow.appjobsflow.api.ApiException
 import com.github.jobsflow.appjobsflow.api.LimitExceededException
+import com.github.jobsflow.appjobsflow.ui.home.AppliedVacancyHistoryStore
+import com.github.jobsflow.appjobsflow.ui.home.AppliedVacancyRecord
 import com.github.jobsflow.appjobsflow.ui.home.VacancyFilters
 import kotlinx.coroutines.delay
 import kotlin.random.Random
@@ -161,12 +163,27 @@ class VacancyApplyWorker(
             }
 
             val vacancyUrl = vacancy["alternate_url"]?.toString() ?: "n/a"
+            val employerName = (vacancy["employer"] as? Map<String, Any>)?.get("name")?.toString().orEmpty()
+            val areaName = (vacancy["area"] as? Map<String, Any>)?.get("name")?.toString().orEmpty()
 
             try {
                 val delayMillis = Random.nextLong(3000, 5000)
                 Log.d(TAG, "Ожидаем $delayMillis перед откликом.")
                 delay(delayMillis)
                 client.api("POST", "/negotiations", payload)
+                AppliedVacancyHistoryStore.append(
+                    sharedPrefs = sharedPrefs,
+                    record = AppliedVacancyRecord(
+                        vacancyId = vacancyId,
+                        vacancyName = vacancyName,
+                        companyName = employerName,
+                        areaName = areaName,
+                        vacancyUrl = vacancyUrl,
+                        resumeId = resumeId,
+                        source = sourceMode,
+                        appliedAtMs = System.currentTimeMillis()
+                    )
+                )
                 appliedTotal += 1
                 showNotification("✅ Отклик на $vacancyUrl ($vacancyName)")
                 Log.i(TAG, "Successfully applied to vacancy: $vacancyUrl")

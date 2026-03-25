@@ -254,6 +254,9 @@ class HomeViewModel(
   private val _isResumeUpdateRunning = MutableStateFlow(false)
   val isResumeUpdateRunning: StateFlow<Boolean> = _isResumeUpdateRunning.asStateFlow()
 
+  private val _appliedVacancies = MutableStateFlow<List<AppliedVacancyRecord>>(emptyList())
+  val appliedVacancies: StateFlow<List<AppliedVacancyRecord>> = _appliedVacancies.asStateFlow()
+
   private var estimateRefreshJob: Job? = null
   private var vacancyEstimateJob: Job? = null
   private var vacancyEstimateRequestSeq: Long = 0
@@ -313,6 +316,7 @@ class HomeViewModel(
         _automationSettings.value = AutomationSettings.fromJsonString(
           sharedPrefs.getString(SHARED_PREFS_AUTOMATION_JSON, null)
         )
+        _appliedVacancies.value = AppliedVacancyHistoryStore.load(sharedPrefs)
 
         with(sharedPrefs.edit()) {
           putString(SHARED_PREFS_COVER_LETTER, _coverLetter.value)
@@ -361,6 +365,22 @@ class HomeViewModel(
   private fun persistTemplates(templates: List<CoverLetterTemplate>) {
     viewModelScope.launch(Dispatchers.IO) {
       sharedPrefs.edit().putString(SHARED_PREFS_COVER_LETTER_TEMPLATES, coverLetterTemplatesToJson(templates)).apply()
+    }
+  }
+
+  fun refreshAppliedVacanciesHistory() {
+    viewModelScope.launch(Dispatchers.IO) {
+      _appliedVacancies.value = AppliedVacancyHistoryStore.load(sharedPrefs)
+    }
+  }
+
+  fun clearAppliedVacanciesHistory() {
+    viewModelScope.launch(Dispatchers.IO) {
+      AppliedVacancyHistoryStore.clear(sharedPrefs)
+      _appliedVacancies.value = emptyList()
+      withContext(Dispatchers.Main) {
+        snackbarHostState.showSnackbar("История откликов очищена")
+      }
     }
   }
 

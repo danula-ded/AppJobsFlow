@@ -31,6 +31,9 @@ fun AppNavigation(client: ApiClient, sharedPrefs: android.content.SharedPreferen
         composable("advancedOptions") {
             AdvancedOptionsScreen(client, sharedPrefs, navController, snackbarHostState)
         }
+        composable("appliedVacancies") {
+            AppliedVacanciesScreen(client, sharedPrefs, navController, snackbarHostState)
+        }
         composable(
             route = "templateEditor/{templateId}",
             arguments = listOf(navArgument("templateId") { type = NavType.StringType })
