@@ -2,7 +2,6 @@
 
 import android.content.SharedPreferences
 import android.net.Uri
-import android.util.Log
 import okhttp3.FormBody
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -10,6 +9,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
+import com.github.jobsflow.appjobsflow.logging.AppFileLogger
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
@@ -167,7 +167,7 @@ class ApiClient(
         val url = buildUrl(baseUrl, endpoint, if (hasBody) null else params?.mapValues { it.value?.toString() ?: "" })
         val safeParams = sanitizeParams(params)
         val startedAtMs = System.currentTimeMillis()
-        Log.i(
+        AppFileLogger.i(
             TAG,
             "[#${requestId}] HH request start: method=$method endpoint=$endpoint includeAuth=$includeAuthHeader hasBody=$hasBody params=$safeParams url=$url"
         )
@@ -198,14 +198,14 @@ class ApiClient(
         val pages = json["pages"]
         val page = json["page"]
 
-        Log.i(
+        AppFileLogger.i(
             TAG,
             "[#${requestId}] HH request done: status=${response.code} durationMs=$durationMs endpoint=$endpoint responseKeys=${json.keys} found=$found pages=$pages page=$page items=$itemsCount"
         )
 
         // Теперь проверка на неуспешный ответ выполняется до разбора JSON
         if (!response.isSuccessful) {
-            Log.e(
+            AppFileLogger.e(
                 TAG,
                 "[#${requestId}] HH request failed: status=${response.code} endpoint=$endpoint errors=${json["errors"]} description=${json["description"]}"
             )

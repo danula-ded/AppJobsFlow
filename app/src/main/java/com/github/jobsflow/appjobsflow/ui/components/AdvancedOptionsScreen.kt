@@ -1,6 +1,7 @@
 ﻿package com.github.jobsflow.appjobsflow.ui.components
 
 import android.content.SharedPreferences
+import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,17 +19,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.github.jobsflow.appjobsflow.R
 import com.github.jobsflow.appjobsflow.api.ApiClient
 import com.github.jobsflow.appjobsflow.api.ApiException
+import com.github.jobsflow.appjobsflow.logging.AppFileLogger
 import com.github.jobsflow.appjobsflow.ui.home.HomeViewModel
 import com.github.jobsflow.appjobsflow.ui.home.HomeViewModelFactory
 import kotlinx.coroutines.Dispatchers
@@ -65,6 +71,37 @@ fun AdvancedOptionsScreen(
 
     val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
     val formattedExpiryDate = accessExpiresAtDate?.let { dateFormat.format(it) } ?: "Неизвестно"
+    var logFileSizeBytes by remember { mutableStateOf(AppFileLogger.getLogFileSizeBytes(context)) }
+    val logFilePath = remember { AppFileLogger.getLogFilePath(context) }
+
+    fun reloadLogInfo() {
+        logFileSizeBytes = AppFileLogger.getLogFileSizeBytes(context)
+    }
+
+    fun shareLogFile() {
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val exportFile = AppFileLogger.prepareExportFile(context)
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    exportFile
+                )
+                withContext(Dispatchers.Main) {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Выгрузить лог"))
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    snackbarHostState.showSnackbar("Не удалось выгрузить лог: ${e.message ?: "ошибка"}")
+                }
+            }
+        }
+    }
 
     fun refreshAccessToken() {
         coroutineScope.launch(Dispatchers.IO) {  // переключаем корутину на IO
@@ -175,6 +212,40 @@ fun AdvancedOptionsScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Остановить отклики")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Диагностический лог", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Файл: $logFilePath",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    text = "Размер: ${logFileSizeBytes / 1024} КБ",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = {
+                            shareLogFile()
+                            reloadLogInfo()
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Выгрузить лог")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(
+                        onClick = {
+                            AppFileLogger.clearLogFile(context)
+                            reloadLogInfo()
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Очистить лог")
                     }
                 }
             }

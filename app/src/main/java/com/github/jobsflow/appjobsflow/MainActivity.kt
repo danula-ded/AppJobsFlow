@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.github.jobsflow.appjobsflow.api.ApiClient
+import com.github.jobsflow.appjobsflow.logging.AppFileLogger
 import com.github.jobsflow.appjobsflow.ui.components.AppNavigation
 import com.github.jobsflow.appjobsflow.ui.theme.AppJobsFlowTheme
 
@@ -23,6 +24,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        AppFileLogger.init(applicationContext)
 
         client = ApiClient(sharedPrefs = sharedPrefs)
 

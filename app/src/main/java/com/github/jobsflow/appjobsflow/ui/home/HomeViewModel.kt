@@ -279,7 +279,7 @@ class HomeViewModel(
                 id = UUID.randomUUID().toString(),
                 name = "Основной шаблон",
                 content = _coverLetter.value,
-                enabled = true
+                enabled = false
               )
             )
           } else {
@@ -366,10 +366,17 @@ class HomeViewModel(
 
   private fun normalizeTemplates(input: List<CoverLetterTemplate>, preferredEnabledId: String? = null): List<CoverLetterTemplate> {
     if (input.isEmpty()) return emptyList()
-    val enabledId = preferredEnabledId
-      ?: input.firstOrNull { it.enabled }?.id
-      ?: input.first().id
-    return input.map { it.copy(enabled = it.id == enabledId) }
+    if (preferredEnabledId != null) {
+      return input.map { it.copy(enabled = it.id == preferredEnabledId) }
+    }
+
+    val enabledTemplates = input.filter { it.enabled }
+    if (enabledTemplates.isEmpty()) {
+      return input.map { it.copy(enabled = false) }
+    }
+
+    val keepEnabledId = enabledTemplates.first().id
+    return input.map { it.copy(enabled = it.id == keepEnabledId) }
   }
 
   private fun isBrokenEncoding(value: String): Boolean {
@@ -503,7 +510,7 @@ class HomeViewModel(
       searchText = searchQuery.value,
       filters = filters.value,
       alwaysAttach = alwaysAttachCoverLetter.value,
-      enabled = _coverLetterTemplates.value.isEmpty()
+      enabled = false
     )
     val updated = normalizeTemplates(_coverLetterTemplates.value + newTemplate)
     _coverLetterTemplates.value = updated
@@ -529,7 +536,7 @@ class HomeViewModel(
       searchText = searchText,
       filters = templateFilters.copy(searchText = searchText),
       alwaysAttach = alwaysAttach,
-      enabled = _coverLetterTemplates.value.isEmpty()
+      enabled = false
     )
     val updated = normalizeTemplates(_coverLetterTemplates.value + newTemplate)
     _coverLetterTemplates.value = updated
