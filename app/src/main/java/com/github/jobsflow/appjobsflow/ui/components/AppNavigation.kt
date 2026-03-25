@@ -3,6 +3,8 @@
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -28,6 +30,18 @@ fun AppNavigation(client: ApiClient, sharedPrefs: android.content.SharedPreferen
         }
         composable("advancedOptions") {
             AdvancedOptionsScreen(client, sharedPrefs, navController, snackbarHostState)
+        }
+        composable(
+            route = "templateEditor/{templateId}",
+            arguments = listOf(navArgument("templateId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            TemplateEditorScreen(
+                client = client,
+                sharedPrefs = sharedPrefs,
+                navController = navController,
+                snackbarHostState = snackbarHostState,
+                templateId = backStackEntry.arguments?.getString("templateId")
+            )
         }
     }
 }

@@ -60,6 +60,7 @@ fun AppScaffold(
     navController: NavController,
     snackbarHostState: SnackbarHostState,
     title: String,
+    scrollableContent: Boolean = true,
     content: @Composable (innerPadding: PaddingValues) -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -255,14 +256,25 @@ fun AppScaffold(
             modifier = Modifier.fillMaxSize(),
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(24.dp, 18.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                content(innerPadding)
+            if (scrollableContent) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(24.dp, 18.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    content(innerPadding)
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(24.dp, 18.dp)
+                ) {
+                    content(innerPadding)
+                }
             }
         }
     }

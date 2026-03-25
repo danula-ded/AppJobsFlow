@@ -2,6 +2,7 @@
 
 import android.content.SharedPreferences
 import android.net.Uri
+import android.util.Log
 import okhttp3.FormBody
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -63,10 +64,23 @@ class ApiClient(
     protected val defaultRedirectUri: String = ApiConstants.REDIRECT_URI,
     protected val sharedPrefs: SharedPreferences? = null,
 ) {
+    companion object {
+        private const val TAG = "ApiClient"
+        private val requestSeq = AtomicLong(0)
+        private val redactedKeys = setOf("authorization", "access_token", "refresh_token", "client_secret", "code")
+    }
+
     protected val client = OkHttpClient.Builder()
         .followRedirects(false)
         .addInterceptor(ApiDelayInterceptor(apiDelay))
         .build()
+
+    private fun sanitizeParams(params: Map<String, Any?>?): Map<String, Any?> {
+        if (params == null) return emptyMap()
+        return params.mapValues { (key, value) ->
+            if (redactedKeys.contains(key.lowercase())) "<redacted>" else value
+        }
+    }
 
     init {
         sharedPrefs?.let { loadFromPrefs(it) }
@@ -148,8 +162,15 @@ class ApiClient(
         includeAuthHeader: Boolean = false,
     ): Map<String, Any?> {
         require(method in listOf("GET", "POST", "PUT", "DELETE")) { "Invalid HTTP method: $method" }
+        val requestId = requestSeq.incrementAndGet()
         val hasBody = method in listOf("POST", "PUT")
         val url = buildUrl(baseUrl, endpoint, if (hasBody) null else params?.mapValues { it.value?.toString() ?: "" })
+        val safeParams = sanitizeParams(params)
+        val startedAtMs = System.currentTimeMillis()
+        Log.i(
+            TAG,
+            "[#${requestId}] HH request start: method=$method endpoint=$endpoint includeAuth=$includeAuthHeader hasBody=$hasBody params=$safeParams url=$url"
+        )
         val requestBuilder = Request.Builder().url(url).headers(defaultHeaders())
         if (includeAuthHeader) {
             accessToken?.let {
@@ -171,9 +192,23 @@ class ApiClient(
         System.err.println("[${response.code}] ${response.request.method} ${response.request.url}")
         val bodyStr = response.body?.string()?.trim()
         val json = if (!bodyStr.isNullOrEmpty()) JSONObject(bodyStr).toMap() else emptyMap()
+        val durationMs = System.currentTimeMillis() - startedAtMs
+        val itemsCount = (json["items"] as? List<*>)?.size
+        val found = json["found"]
+        val pages = json["pages"]
+        val page = json["page"]
+
+        Log.i(
+            TAG,
+            "[#${requestId}] HH request done: status=${response.code} durationMs=$durationMs endpoint=$endpoint responseKeys=${json.keys} found=$found pages=$pages page=$page items=$itemsCount"
+        )
 
         // Теперь проверка на неуспешный ответ выполняется до разбора JSON
         if (!response.isSuccessful) {
+            Log.e(
+                TAG,
+                "[#${requestId}] HH request failed: status=${response.code} endpoint=$endpoint errors=${json["errors"]} description=${json["description"]}"
+            )
             throwApiException(response, json)
         }
         return json.toMap()
